@@ -22,9 +22,9 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildAlertSection(),
                   const SizedBox(height: 24),
-                  _buildQuickActions(),
+                  _buildQuickActions(context),
                   const SizedBox(height: 24),
-                  _buildVehicleSummary(),
+                  _buildVehicleSummary(context),
                   const SizedBox(height: 16),
                 ]),
               ),
@@ -52,7 +52,9 @@ class HomeScreen extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
           color: AppColors.textSecondary,
-          onPressed: () {},
+          onPressed: () {
+            context.push(AppRoutes.reminders);
+          },
         ),
         IconButton(
           icon: const Icon(Icons.settings_outlined),
@@ -182,7 +184,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -199,6 +201,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _buildActionCard(
+                () => context.push(AppRoutes.fuelLog),
                 'Add Fuel',
                 Icons.local_gas_station,
                 AppColors.primary,
@@ -207,6 +210,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
+                () => context.push(AppRoutes.addService),
                 'Add Service',
                 Icons.build,
                 AppColors.accent,
@@ -218,44 +222,52 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionCard(String label, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
+  Widget _buildActionCard(
+    VoidCallback onTap,
+    String label,
+    IconData icon,
+    Color color,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildVehicleSummary() {
+  Widget _buildVehicleSummary(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -270,7 +282,12 @@ class HomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextButton(onPressed: () {}, child: const Text('View All')),
+            TextButton(
+              onPressed: () {
+                context.push(AppRoutes.vehicles);
+              },
+              child: const Text('View All'),
+            ),
           ],
         ),
         const SizedBox(height: 12),

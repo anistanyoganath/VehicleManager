@@ -11,6 +11,7 @@ class ReminderSettingsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
         title: Text(
           'Reminders',
           style: TextStyle(

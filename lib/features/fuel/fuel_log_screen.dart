@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
 
 class FuelLogScreen extends StatelessWidget {
-    final String vehicleId;
+  final String vehicleId;
 
   const FuelLogScreen({super.key, required this.vehicleId});
 
@@ -12,6 +12,8 @@ class FuelLogScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
+
         elevation: 0,
         title: Text(
           'Fuel Log',

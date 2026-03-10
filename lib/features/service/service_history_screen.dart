@@ -12,6 +12,7 @@ class ServiceHistoryScreen extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
         elevation: 0,
         title: Text(
           'Service History',
