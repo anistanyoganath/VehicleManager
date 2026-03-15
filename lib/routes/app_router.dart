@@ -6,6 +6,7 @@ import 'package:vehiclemanager/features/fuel/fuel_log_screen.dart';
 import 'package:vehiclemanager/features/reminders/reminder_settings_screen.dart';
 import 'package:vehiclemanager/features/notifications/notifications_screen.dart';
 import 'package:vehiclemanager/features/service/add_service_screen.dart';
+import 'package:vehiclemanager/features/vehicles/edit_vehicle_screen.dart';
 import 'package:vehiclemanager/features/service/service_history_screen.dart';
 import 'package:vehiclemanager/features/vehicles/add_vehicle_screen.dart';
 import 'package:vehiclemanager/features/vehicles/vehicle_detail_screen.dart';
@@ -111,6 +112,22 @@ class AppRouter {
         path: AppRoutes.notifications,
         name: 'notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+
+      // Edit Vehicle Screen
+      GoRoute(
+        path: AppRoutes.editVehicle,
+        name: 'editVehicle',
+        builder: (context, state) {
+          final vehicleIdStr = state.pathParameters['vehicleId'];
+          final vehicleId = int.tryParse(vehicleIdStr ?? '');
+          if (vehicleId == null) {
+            return const Scaffold(
+              body: Center(child: Text('Invalid Vehicle ID')),
+            );
+          }
+          return EditVehicleScreen(vehicleId: vehicleId);
+        },
       ),
     ],
 

@@ -11,9 +11,11 @@ class AppRoutes {
   static const String serviceHistory = '/service-history/:vehicleId';
   static const String fuelLog = '/fuel-log/:vehicleId';
   static const String notifications = '/notifications';
+  static const String editVehicle = '/edit-vehicle/:vehicleId';
 
   // Helper methods to build paths with parameters
   static String vehicleDetailPath(String vehicleId) => '/vehicle/$vehicleId';
+  static String editVehiclePath(String vehicleId) => '/edit-vehicle/$vehicleId';
   static String addServicePath(String vehicleId) => '/add-service/$vehicleId';
   static String serviceHistoryPath(String vehicleId) =>
       '/service-history/$vehicleId';

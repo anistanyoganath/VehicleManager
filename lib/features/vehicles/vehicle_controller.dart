@@ -35,4 +35,8 @@ class VehicleController with ChangeNotifier {
   int getNextId() {
     return _repository.getNextId();
   }
+
+  VehicleModel? getVehicleById(int id) {
+    return _repository.getVehicleById(id);
+  }
 }
