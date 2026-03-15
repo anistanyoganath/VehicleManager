@@ -19,12 +19,16 @@ class VehicleModel {
   @HiveField(4)
   final int currentMileage;
 
+  @HiveField(5)
+  final String type;
+
   VehicleModel({
     required this.id,
     required this.name,
     required this.brand,
     required this.model,
     required this.currentMileage,
+    required this.type,
   });
 
   VehicleModel copyWith({
@@ -33,6 +37,7 @@ class VehicleModel {
     String? brand,
     String? model,
     int? currentMileage,
+    String? type,
   }) {
     return VehicleModel(
       id: id ?? this.id,
@@ -40,6 +45,7 @@ class VehicleModel {
       brand: brand ?? this.brand,
       model: model ?? this.model,
       currentMileage: currentMileage ?? this.currentMileage,
+      type: type ?? this.type,
     );
   }
 }

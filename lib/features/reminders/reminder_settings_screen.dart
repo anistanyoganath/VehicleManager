@@ -1,8 +1,95 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import '../../data/local_db/hive_service.dart';
 
-class ReminderSettingsScreen extends StatelessWidget {
+class ReminderSettingsScreen extends StatefulWidget {
   const ReminderSettingsScreen({super.key});
+
+  @override
+  State<ReminderSettingsScreen> createState() => _ReminderSettingsScreenState();
+}
+
+class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
+  late Box _settingsBox;
+  bool _serviceByKmEnabled = true;
+  double _serviceByKmDistance = 500;
+  bool _serviceByDateEnabled = false;
+  String _serviceByDateInterval = '1 Month';
+  bool _insuranceEnabled = true;
+  int _insuranceDaysBefore = 30;
+  TimeOfDay _insuranceTime = const TimeOfDay(hour: 9, minute: 0);
+  bool _pushEnabled = true;
+  bool _emailEnabled = false;
+  bool _soundEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _settingsBox = Hive.box(HiveService.settingsBox);
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    setState(() {
+      _serviceByKmEnabled = _settingsBox.get(
+        'serviceByKmEnabled',
+        defaultValue: true,
+      );
+      _serviceByKmDistance = _settingsBox.get(
+        'serviceByKmDistance',
+        defaultValue: 500.0,
+      );
+      _serviceByDateEnabled = _settingsBox.get(
+        'serviceByDateEnabled',
+        defaultValue: false,
+      );
+      _serviceByDateInterval = _settingsBox.get(
+        'serviceByDateInterval',
+        defaultValue: '1 Month',
+      );
+      _insuranceEnabled = _settingsBox.get(
+        'insuranceEnabled',
+        defaultValue: true,
+      );
+      _insuranceDaysBefore = _settingsBox.get(
+        'insuranceDaysBefore',
+        defaultValue: 30,
+      );
+      final String timeString = _settingsBox.get(
+        'insuranceTime',
+        defaultValue: '09:00',
+      );
+      final parts = timeString.split(':');
+      _insuranceTime = TimeOfDay(
+        hour: int.tryParse(parts[0]) ?? 9,
+        minute: int.tryParse(parts[1]) ?? 0,
+      );
+      _pushEnabled = _settingsBox.get('pushEnabled', defaultValue: true);
+      _emailEnabled = _settingsBox.get('emailEnabled', defaultValue: false);
+      _soundEnabled = _settingsBox.get('soundEnabled', defaultValue: true);
+    });
+  }
+
+  void _setSetting(String key, dynamic value) {
+    _settingsBox.put(key, value);
+  }
+
+  Future<void> _pickInsuranceTime(BuildContext context) async {
+    final result = await showTimePicker(
+      context: context,
+      initialTime: _insuranceTime,
+    );
+    if (result != null) {
+      setState(() {
+        _insuranceTime = result;
+        _setSetting(
+          'insuranceTime',
+          '${result.hour.toString().padLeft(2, '0')}:${result.minute.toString().padLeft(2, '0')}',
+        );
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +116,13 @@ class ReminderSettingsScreen extends StatelessWidget {
             'Get notified when service is due by mileage',
             Icons.speed,
             AppColors.primary,
-            true,
+            _serviceByKmEnabled,
+            onChanged: (val) {
+              setState(() {
+                _serviceByKmEnabled = val;
+                _setSetting('serviceByKmEnabled', val);
+              });
+            },
             child: _buildMileageSlider(),
           ),
           const SizedBox(height: 16),
@@ -38,7 +131,13 @@ class ReminderSettingsScreen extends StatelessWidget {
             'Get notified based on time intervals',
             Icons.calendar_today,
             AppColors.accent,
-            false,
+            _serviceByDateEnabled,
+            onChanged: (val) {
+              setState(() {
+                _serviceByDateEnabled = val;
+                _setSetting('serviceByDateEnabled', val);
+              });
+            },
             child: _buildDateIntervalPicker(),
           ),
           const SizedBox(height: 16),
@@ -47,7 +146,13 @@ class ReminderSettingsScreen extends StatelessWidget {
             'Get notified before insurance expires',
             Icons.security,
             AppColors.warning,
-            true,
+            _insuranceEnabled,
+            onChanged: (val) {
+              setState(() {
+                _insuranceEnabled = val;
+                _setSetting('insuranceEnabled', val);
+              });
+            },
             child: _buildInsuranceSettings(),
           ),
           const SizedBox(height: 24),
@@ -63,6 +168,7 @@ class ReminderSettingsScreen extends StatelessWidget {
     IconData icon,
     Color color,
     bool value, {
+    required ValueChanged<bool> onChanged,
     Widget? child,
   }) {
     return Container(
@@ -114,7 +220,7 @@ class ReminderSettingsScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Switch(value: value, onChanged: (val) {}, activeColor: color),
+              Switch(value: value, onChanged: onChanged, activeColor: color),
             ],
           ),
           if (child != null) ...[const SizedBox(height: 16), child],
@@ -135,7 +241,7 @@ class ReminderSettingsScreen extends StatelessWidget {
               style: TextStyle(color: AppColors.textSecondary),
             ),
             Text(
-              '500 km',
+              '${_serviceByKmDistance.toInt()} km',
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -144,11 +250,18 @@ class ReminderSettingsScreen extends StatelessWidget {
           ],
         ),
         Slider(
-          value: 500,
+          value: _serviceByKmDistance,
           min: 100,
           max: 5000,
-          divisions: 10,
-          onChanged: (val) {},
+          divisions: 49,
+          onChanged: _serviceByKmEnabled
+              ? (val) {
+                  setState(() {
+                    _serviceByKmDistance = val;
+                    _setSetting('serviceByKmDistance', val);
+                  });
+                }
+              : null,
           activeColor: AppColors.primary,
         ),
       ],
@@ -164,28 +277,39 @@ class ReminderSettingsScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildIntervalOption('1 Month', true)),
-          Expanded(child: _buildIntervalOption('3 Months', false)),
-          Expanded(child: _buildIntervalOption('6 Months', false)),
+          Expanded(child: _buildIntervalOption('1 Month')),
+          Expanded(child: _buildIntervalOption('3 Months')),
+          Expanded(child: _buildIntervalOption('6 Months')),
         ],
       ),
     );
   }
 
-  Widget _buildIntervalOption(String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.accent : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+  Widget _buildIntervalOption(String label) {
+    final isSelected = _serviceByDateInterval == label;
+    return GestureDetector(
+      onTap: _serviceByDateEnabled
+          ? () {
+              setState(() {
+                _serviceByDateInterval = label;
+                _setSetting('serviceByDateInterval', label);
+              });
+            }
+          : null,
+      child: Container(
+        margin: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accent : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
           ),
         ),
       ),
@@ -195,35 +319,115 @@ class ReminderSettingsScreen extends StatelessWidget {
   Widget _buildInsuranceSettings() {
     return Row(
       children: [
-        Expanded(child: _buildInsuranceField('Days before', '30')),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Days before',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.remove, size: 18),
+                      onPressed: _insuranceEnabled
+                          ? () {
+                              setState(() {
+                                _insuranceDaysBefore =
+                                    (_insuranceDaysBefore - 1).clamp(1, 365);
+                                _setSetting(
+                                  'insuranceDaysBefore',
+                                  _insuranceDaysBefore,
+                                );
+                              });
+                            }
+                          : null,
+                    ),
+                    Expanded(
+                      child: Text(
+                        '$_insuranceDaysBefore days',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      icon: const Icon(Icons.add, size: 18),
+                      onPressed: _insuranceEnabled
+                          ? () {
+                              setState(() {
+                                _insuranceDaysBefore =
+                                    (_insuranceDaysBefore + 1).clamp(1, 365);
+                                _setSetting(
+                                  'insuranceDaysBefore',
+                                  _insuranceDaysBefore,
+                                );
+                              });
+                            }
+                          : null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: _buildInsuranceField('Notify at', '09:00')),
+        Expanded(
+          child: _buildInsuranceField(
+            'Notify at',
+            _insuranceTime.format(context),
+            onTap: _insuranceEnabled ? () => _pickInsuranceTime(context) : null,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildInsuranceField(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+  Widget _buildInsuranceField(
+    String label,
+    String value, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
             ),
-          ),
-        ],
+            Text(
+              value,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -254,24 +458,43 @@ class ReminderSettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _buildNotificationOption('Push Notifications', true),
+          _buildNotificationOption('Push Notifications', _pushEnabled, (val) {
+            setState(() {
+              _pushEnabled = val;
+              _setSetting('pushEnabled', val);
+            });
+          }),
           const SizedBox(height: 12),
-          _buildNotificationOption('Email Notifications', false),
+          _buildNotificationOption('Email Notifications', _emailEnabled, (val) {
+            setState(() {
+              _emailEnabled = val;
+              _setSetting('emailEnabled', val);
+            });
+          }),
           const SizedBox(height: 12),
-          _buildNotificationOption('Sound', true),
+          _buildNotificationOption('Sound', _soundEnabled, (val) {
+            setState(() {
+              _soundEnabled = val;
+              _setSetting('soundEnabled', val);
+            });
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildNotificationOption(String title, bool value) {
+  Widget _buildNotificationOption(
+    String title,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: TextStyle(color: AppColors.textPrimary)),
         Switch(
           value: value,
-          onChanged: (val) {},
+          onChanged: onChanged,
           activeColor: AppColors.primary,
         ),
       ],

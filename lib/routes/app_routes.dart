@@ -10,6 +10,7 @@ class AppRoutes {
   static const String addService = '/add-service/:vehicleId';
   static const String serviceHistory = '/service-history/:vehicleId';
   static const String fuelLog = '/fuel-log/:vehicleId';
+  static const String notifications = '/notifications';
 
   // Helper methods to build paths with parameters
   static String vehicleDetailPath(String vehicleId) => '/vehicle/$vehicleId';
@@ -17,4 +18,5 @@ class AppRoutes {
   static String serviceHistoryPath(String vehicleId) =>
       '/service-history/$vehicleId';
   static String fuelLogPath(String vehicleId) => '/fuel-log/$vehicleId';
+  static String notificationsPath() => '/notifications';
 }

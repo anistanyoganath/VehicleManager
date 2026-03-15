@@ -9,6 +9,7 @@ class HiveService {
   static const String serviceBox = 'services';
   static const String fuelBox = 'fuels';
   static const String reminderBox = 'reminders';
+  static const String settingsBox = 'settings';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -24,5 +25,6 @@ class HiveService {
     await Hive.openBox<ServiceRecordModel>(serviceBox);
     await Hive.openBox<FuelLogModel>(fuelBox);
     await Hive.openBox<ReminderModel>(reminderBox);
+    await Hive.openBox(settingsBox);
   }
 }

@@ -7,7 +7,7 @@ import '../../core/utils/date_utils.dart';
 import 'service_controller.dart';
 
 class AddServiceScreen extends StatefulWidget {
-  final String vehicleId;
+  final int vehicleId;
 
   const AddServiceScreen({super.key, required this.vehicleId});
 
@@ -48,7 +48,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
 
   void _saveService() {
     if (_formKey.currentState!.validate()) {
-      final vehicleId = ModalRoute.of(context)!.settings.arguments as int;
+      final vehicleId = widget.vehicleId;
       final serviceController = Provider.of<ServiceController>(
         context,
         listen: false,

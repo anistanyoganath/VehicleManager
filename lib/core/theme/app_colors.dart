@@ -12,6 +12,7 @@ class AppColors {
   static const accent = Color(0xFF10B981); // Success green for maintenance
   static const warning = Color(0xFFF59E0B); // Warning orange for reminders
   static const danger = Color(0xFFEF4444); // Red for expiry
+  static const info = Color(0xFF3B82F6);
 
   // Neutral Colors
   static const background = Color(0xFFF8FAFC);

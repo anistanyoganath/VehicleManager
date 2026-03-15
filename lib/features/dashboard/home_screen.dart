@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:vehiclemanager/core/theme/app_colors.dart';
-import 'package:vehiclemanager/routes/app_routes.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:vehiclemanager/core/theme/app_colors.dart';
+import 'package:vehiclemanager/features/service/service_controller.dart';
+import 'package:vehiclemanager/routes/app_routes.dart';
+import '../vehicles/vehicle_controller.dart';
+import '../../data/models/vehicle_model.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -53,7 +57,7 @@ class HomeScreen extends StatelessWidget {
           icon: const Icon(Icons.notifications_outlined),
           color: AppColors.textSecondary,
           onPressed: () {
-            context.push(AppRoutes.reminders);
+            context.push(AppRoutes.notifications);
           },
         ),
         IconButton(
@@ -102,47 +106,109 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildAlertSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.warning_amber, color: Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                'Alerts',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+    return Consumer2<VehicleController, ServiceController>(
+      builder: (context, vehicleController, serviceController, child) {
+        final vehicles = vehicleController.vehicles;
+        final alerts = <Map<String, dynamic>>[];
+
+        for (final vehicle in vehicles) {
+          final services = serviceController.getServicesByVehicleId(vehicle.id);
+          if (services.isEmpty) {
+            alerts.add({
+              'title': 'Service Missing',
+              'subtitle':
+                  '${vehicle.brand} ${vehicle.model} has no service records',
+              'color': AppColors.warning,
+            });
+            continue;
+          }
+
+          final latestService = services.reduce(
+            (a, b) => a.mileageAtService > b.mileageAtService ? a : b,
+          );
+          final diff = vehicle.currentMileage - latestService.mileageAtService;
+          final nextServiceDistance = 5000;
+          final remaining = nextServiceDistance - diff;
+
+          if (remaining <= 0) {
+            alerts.add({
+              'title': 'Service Due',
+              'subtitle':
+                  '${vehicle.brand} ${vehicle.model} - ${-remaining} km overdue',
+              'color': AppColors.warning,
+            });
+          } else if (remaining <= 500) {
+            alerts.add({
+              'title': 'Service Soon',
+              'subtitle':
+                  '${vehicle.brand} ${vehicle.model} - $remaining km left',
+              'color': AppColors.warning,
+            });
+          }
+        }
+
+        if (alerts.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Text(
+              'No alerts at the moment.',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
+        }
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.warning_amber, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Alerts',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...alerts.take(2).map((alert) {
+                return Column(
+                  children: [
+                    _buildAlertItem(
+                      alert['title'] as String,
+                      alert['subtitle'] as String,
+                      alert['color'] as Color,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                );
+              }),
             ],
           ),
-          const SizedBox(height: 12),
-          _buildAlertItem(
-            'Service Due',
-            'Honda CB150R - 500 km overdue',
-            AppColors.warning,
-          ),
-          const SizedBox(height: 8),
-          _buildAlertItem(
-            'Insurance Expiry',
-            'Yamaha NMAX - 5 days left',
-            AppColors.danger,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -268,55 +334,70 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildVehicleSummary(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Consumer<VehicleController>(
+      builder: (context, vehicleController, child) {
+        final vehicles = vehicleController.vehicles;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'My Vehicles',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'My Vehicles',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    context.push(AppRoutes.vehicles);
+                  },
+                  child: const Text('View All'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (vehicles.isEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 18,
+                  horizontal: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'No vehicles yet. Tap "View All" to add one.',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              )
+            else
+              Column(
+                children: vehicles
+                    .take(2)
+                    .map(
+                      (vehicle) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: _buildVehicleCard(vehicle),
+                      ),
+                    )
+                    .toList(),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                context.push(AppRoutes.vehicles);
-              },
-              child: const Text('View All'),
-            ),
           ],
-        ),
-        const SizedBox(height: 12),
-        _buildVehicleCard(
-          'Honda CB150R',
-          'Motorcycle',
-          '12,450 km',
-          'Service in 500 km',
-          'assets/honda.png',
-        ),
-        const SizedBox(height: 8),
-        _buildVehicleCard(
-          'Yamaha NMAX',
-          'Scooter',
-          '8,230 km',
-          'Service due',
-          'assets/yamaha.png',
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildVehicleCard(
-    String name,
-    String type,
-    String mileage,
-    String serviceStatus,
-    String imagePath,
-  ) {
+  Widget _buildVehicleCard(VehicleModel vehicle) {
+    final milesText = '${vehicle.currentMileage} km';
+    final serviceText = 'No service data yet';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -339,7 +420,10 @@ class HomeScreen extends StatelessWidget {
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.directions_car, color: AppColors.primary),
+            child: Icon(
+              _getVehicleIcon(vehicle.type),
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -347,7 +431,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  '${vehicle.brand} ${vehicle.model}',
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
@@ -355,7 +439,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  type,
+                  vehicle.type,
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
@@ -367,7 +451,7 @@ class HomeScreen extends StatelessWidget {
                     Icon(Icons.speed, size: 14, color: AppColors.textHint),
                     const SizedBox(width: 4),
                     Text(
-                      mileage,
+                      milesText,
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
@@ -381,17 +465,13 @@ class HomeScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: serviceStatus.contains('due')
-                  ? AppColors.danger.withOpacity(0.1)
-                  : AppColors.warning.withOpacity(0.1),
+              color: AppColors.warning.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              serviceStatus,
+              serviceText,
               style: TextStyle(
-                color: serviceStatus.contains('due')
-                    ? AppColors.danger
-                    : AppColors.warning,
+                color: AppColors.warning,
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
               ),
@@ -400,5 +480,18 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _getVehicleIcon(String type) {
+    switch (type) {
+      case 'Motorcycle':
+        return Icons.motorcycle;
+      case 'Car':
+        return Icons.directions_car;
+      case 'Scooter':
+        return Icons.electric_scooter;
+      default:
+        return Icons.directions_car;
+    }
   }
 }

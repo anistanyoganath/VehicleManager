@@ -1,7 +1,10 @@
 // lib/features/vehicles/presentation/vehicle_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:vehiclemanager/routes/app_routes.dart';
+import 'vehicle_controller.dart';
+import '../../data/models/vehicle_model.dart';
 
 class VehicleListScreen extends StatelessWidget {
   const VehicleListScreen({Key? key}) : super(key: key);
@@ -26,11 +29,20 @@ class VehicleListScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 3,
-        itemBuilder: (context, index) {
-          return _buildVehicleCard(context, index);
+      body: Consumer<VehicleController>(
+        builder: (context, vehicleController, child) {
+          final vehicles = vehicleController.vehicles;
+          if (vehicles.isEmpty) {
+            return const Center(child: Text('No vehicles added yet.'));
+          }
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: vehicles.length,
+            itemBuilder: (context, index) {
+              final vehicle = vehicles[index];
+              return _buildVehicleCard(context, vehicle);
+            },
+          );
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -45,9 +57,7 @@ class VehicleListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVehicleCard(BuildContext context, int index) {
-    final vehicleId = 'vehicle-${index + 1}';
-
+  Widget _buildVehicleCard(BuildContext context, VehicleModel vehicle) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -58,7 +68,7 @@ class VehicleListScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           onTap: () {
             // Navigate to vehicle detail
-            context.push(AppRoutes.vehicleDetailPath(vehicleId));
+            context.push(AppRoutes.vehicleDetailPath(vehicle.id.toString()));
           },
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -71,10 +81,10 @@ class VehicleListScreen extends StatelessWidget {
                     color: const Color(0xFF2563EB).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
-                    Icons.directions_car,
+                  child: Icon(
+                    _getVehicleIcon(vehicle.type),
                     size: 40,
-                    color: Color(0xFF2563EB),
+                    color: const Color(0xFF2563EB),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -83,7 +93,7 @@ class VehicleListScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Honda CB150R',
+                        '${vehicle.brand} ${vehicle.model}',
                         style: TextStyle(
                           color: const Color(0xFF1E293B),
                           fontSize: 18,
@@ -92,7 +102,7 @@ class VehicleListScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '2023 • 12,450 km',
+                        '${vehicle.name} • ${vehicle.currentMileage} km',
                         style: TextStyle(
                           color: const Color(0xFF64748B),
                           fontSize: 14,
@@ -137,5 +147,18 @@ class VehicleListScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  IconData _getVehicleIcon(String type) {
+    switch (type) {
+      case 'Motorcycle':
+        return Icons.motorcycle;
+      case 'Car':
+        return Icons.directions_car;
+      case 'Scooter':
+        return Icons.electric_scooter;
+      default:
+        return Icons.directions_car;
+    }
   }
 }

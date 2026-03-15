@@ -1,9 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import '../../data/models/vehicle_model.dart';
+import 'vehicle_controller.dart';
 
-class AddVehicleScreen extends StatelessWidget {
+class AddVehicleScreen extends StatefulWidget {
   const AddVehicleScreen({super.key});
+
+  @override
+  State<AddVehicleScreen> createState() => _AddVehicleScreenState();
+}
+
+class _AddVehicleScreenState extends State<AddVehicleScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _brandController = TextEditingController();
+  final _modelController = TextEditingController();
+  final _mileageController = TextEditingController();
+  String _selectedType = 'Motorcycle';
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _brandController.dispose();
+    _modelController.dispose();
+    _mileageController.dispose();
+    super.dispose();
+  }
+
+  void _saveVehicle() {
+    if (_formKey.currentState!.validate()) {
+      final vehicleController = Provider.of<VehicleController>(
+        context,
+        listen: false,
+      );
+      final vehicle = VehicleModel(
+        id: vehicleController.getNextId(),
+        name: _nameController.text,
+        brand: _brandController.text,
+        model: _modelController.text,
+        currentMileage: int.parse(_mileageController.text),
+        type: _selectedType,
+      );
+      vehicleController.addVehicle(vehicle);
+      context.pop();
+    }
+  }
+
+  void _selectType(String type) {
+    setState(() {
+      _selectedType = type;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,27 +74,31 @@ class AddVehicleScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildVehicleTypeSelector(),
-            const SizedBox(height: 24),
-            _buildTextField('Vehicle Name', 'e.g., My Bike'),
-            const SizedBox(height: 16),
-            _buildTextField('Brand', 'e.g., Honda'),
-            const SizedBox(height: 16),
-            _buildTextField('Model', 'e.g., CB150R'),
-            const SizedBox(height: 16),
-            _buildTextField(
-              'Current Mileage',
-              '12,450',
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 24),
-            _buildImageUpload(),
-          ],
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildVehicleTypeSelector(),
+              const SizedBox(height: 24),
+              _buildTextField('Vehicle Name', 'e.g., My Bike', _nameController),
+              const SizedBox(height: 16),
+              _buildTextField('Brand', 'e.g., Honda', _brandController),
+              const SizedBox(height: 16),
+              _buildTextField('Model', 'e.g., CB150R', _modelController),
+              const SizedBox(height: 16),
+              _buildTextField(
+                'Current Mileage',
+                '12,450',
+                _mileageController,
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 24),
+              _buildImageUpload(),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Container(
@@ -62,7 +115,7 @@ class AddVehicleScreen extends StatelessWidget {
         ),
         child: SafeArea(
           child: ElevatedButton(
-            onPressed: () {},
+            onPressed: _saveVehicle,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               minimumSize: const Size(double.infinity, 56),
@@ -96,13 +149,36 @@ class AddVehicleScreen extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildTypeChip('Motorcycle', Icons.motorcycle, true),
+              child: GestureDetector(
+                onTap: () => _selectType('Motorcycle'),
+                child: _buildTypeChip(
+                  'Motorcycle',
+                  Icons.motorcycle,
+                  _selectedType == 'Motorcycle',
+                ),
+              ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: _buildTypeChip('Car', Icons.directions_car, false)),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _selectType('Car'),
+                child: _buildTypeChip(
+                  'Car',
+                  Icons.directions_car,
+                  _selectedType == 'Car',
+                ),
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
-              child: _buildTypeChip('Scooter', Icons.electric_scooter, false),
+              child: GestureDetector(
+                onTap: () => _selectType('Scooter'),
+                child: _buildTypeChip(
+                  'Scooter',
+                  Icons.electric_scooter,
+                  _selectedType == 'Scooter',
+                ),
+              ),
             ),
           ],
         ),
@@ -144,7 +220,8 @@ class AddVehicleScreen extends StatelessWidget {
 
   Widget _buildTextField(
     String label,
-    String hint, {
+    String hint,
+    TextEditingController controller, {
     TextInputType? keyboardType,
   }) {
     return Column(
@@ -159,8 +236,19 @@ class AddVehicleScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
+          controller: controller,
           keyboardType: keyboardType,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter $label';
+            }
+            if (keyboardType == TextInputType.number &&
+                int.tryParse(value) == null) {
+              return 'Please enter a valid number';
+            }
+            return null;
+          },
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: AppColors.textHint),
