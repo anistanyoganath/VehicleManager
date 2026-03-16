@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
 import '../../data/local_db/hive_service.dart';
 
 class ReminderSettingsScreen extends StatefulWidget {
@@ -159,6 +160,7 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
           _buildNotificationSettings(),
         ],
       ),
+      bottomNavigationBar: const BannerAdvert(),
     );
   }
 

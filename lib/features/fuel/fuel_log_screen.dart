@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
+import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
 
 class FuelLogScreen extends StatelessWidget {
   final String vehicleId;
@@ -48,10 +50,14 @@ class FuelLogScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          await AdsManager().showInterstitialAd();
+          // Add fuel functionality goes here.
+        },
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
       ),
+      bottomNavigationBar: const BannerAdvert(),
     );
   }
 

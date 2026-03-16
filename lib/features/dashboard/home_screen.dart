@@ -2,13 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
+import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
 import 'package:vehiclemanager/features/service/service_controller.dart';
 import 'package:vehiclemanager/routes/app_routes.dart';
 import '../vehicles/vehicle_controller.dart';
 import '../../data/models/vehicle_model.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    // Init Ads
+    AdsManager().initAll();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +45,12 @@ class HomeScreen extends StatelessWidget {
                   _buildVehicleSummary(context),
                   const SizedBox(height: 16),
                 ]),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: BannerAdvert(),
               ),
             ),
           ],
@@ -267,7 +287,10 @@ class HomeScreen extends StatelessWidget {
           children: [
             Expanded(
               child: _buildActionCard(
-                () => context.push(AppRoutes.fuelLog),
+                () async {
+                  await AdsManager().showInterstitialAd();
+                  context.push(AppRoutes.fuelLog);
+                },
                 'Add Fuel',
                 Icons.local_gas_station,
                 AppColors.primary,
@@ -276,7 +299,10 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
-                () => context.push(AppRoutes.addService),
+                () async {
+                  await AdsManager().showInterstitialAd();
+                  context.push(AppRoutes.addService);
+                },
                 'Add Service',
                 Icons.build,
                 AppColors.accent,
@@ -289,13 +315,15 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildActionCard(
-    VoidCallback onTap,
+    Future<void> Function() onTap,
     String label,
     IconData icon,
     Color color,
   ) {
     return InkWell(
-      onTap: onTap,
+      onTap: () async {
+        await onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
@@ -353,7 +381,8 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    await AdsManager().showInterstitialAd();
                     context.push(AppRoutes.vehicles);
                   },
                   child: const Text('View All'),

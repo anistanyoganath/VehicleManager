@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
+import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
 import '../../data/models/service_record_model.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/custom_button.dart';
@@ -46,7 +48,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
     }
   }
 
-  void _saveService() {
+  Future<void> _saveService() async {
     if (_formKey.currentState!.validate()) {
       final vehicleId = widget.vehicleId;
       final serviceController = Provider.of<ServiceController>(
@@ -63,6 +65,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
         notes: _notesController.text,
       );
       serviceController.addService(service);
+      await AdsManager().showInterstitialAd();
       Navigator.pop(context);
     }
   }
@@ -145,6 +148,7 @@ class _AddServiceScreenState extends State<AddServiceScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const BannerAdvert(),
     );
   }
 }

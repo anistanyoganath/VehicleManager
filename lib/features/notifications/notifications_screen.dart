@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
+import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
 import 'package:vehiclemanager/features/service/service_controller.dart';
 import '../vehicles/vehicle_controller.dart';
 
@@ -135,6 +137,7 @@ class NotificationsScreen extends StatelessWidget {
           );
         },
       ),
+      bottomNavigationBar: const BannerAdvert(),
     );
   }
 
@@ -156,8 +159,9 @@ class NotificationsScreen extends StatelessWidget {
         elevation: 0,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // Navigate to vehicle detail or service history
+          onTap: () async {
+            // Show a refresh / cross-promotional interstitial before navigation
+            await AdsManager().showInterstitialAd();
             if (item.containsKey('vehicleId')) {
               // Navigate to vehicle detail
               // context.push('/vehicle/${item['vehicleId']}');

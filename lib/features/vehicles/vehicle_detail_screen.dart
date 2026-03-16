@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
+import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
 import 'package:vehiclemanager/routes/app_routes.dart';
 import '../vehicles/vehicle_controller.dart';
 import '../../data/models/vehicle_model.dart';
@@ -143,6 +145,7 @@ class VehicleDetailScreen extends StatelessWidget {
               ),
             ],
           ),
+          bottomNavigationBar: const BannerAdvert(),
         );
       },
     );
@@ -157,7 +160,10 @@ class VehicleDetailScreen extends StatelessWidget {
             'Service',
             Icons.build,
             const Color(0xFF2563EB),
-            () => context.push(AppRoutes.addServicePath(vehicleId)),
+            () async {
+              await AdsManager().showInterstitialAd();
+              context.push(AppRoutes.addServicePath(vehicleId));
+            },
           ),
         ),
         const SizedBox(width: 12),
@@ -167,7 +173,10 @@ class VehicleDetailScreen extends StatelessWidget {
             'Fuel',
             Icons.local_gas_station,
             const Color(0xFF10B981),
-            () => context.push(AppRoutes.fuelLogPath(vehicleId)),
+            () async {
+              await AdsManager().showInterstitialAd();
+              context.push(AppRoutes.fuelLogPath(vehicleId));
+            },
           ),
         ),
         const SizedBox(width: 12),
@@ -177,7 +186,10 @@ class VehicleDetailScreen extends StatelessWidget {
             'History',
             Icons.history,
             const Color(0xFFF59E0B),
-            () => context.push(AppRoutes.serviceHistoryPath(vehicleId)),
+            () async {
+              await AdsManager().showInterstitialAd();
+              context.push(AppRoutes.serviceHistoryPath(vehicleId));
+            },
           ),
         ),
       ],
@@ -189,10 +201,12 @@ class VehicleDetailScreen extends StatelessWidget {
     String label,
     IconData icon,
     Color color,
-    VoidCallback onTap,
+    Future<void> Function() onTap,
   ) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () async {
+        await onTap();
+      },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

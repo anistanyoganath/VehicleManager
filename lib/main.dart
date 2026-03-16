@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
+import 'package:vehiclemanager/core/utils/ads/ad_consent.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/notification_service.dart';
 import 'data/local_db/hive_service.dart';
@@ -11,6 +13,11 @@ import 'routes/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  consenting.updateConsent();
+
+  MobileAds.instance.initialize();
+
   await HiveService.init();
   await NotificationService.init();
   runApp(const MyApp());

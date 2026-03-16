@@ -49,6 +49,8 @@ dependencies:
   go_router: ^17.1.0
   intl: ^0.20.2
   timezone: ^0.9.4
+  gma_mediation_unity: ^1.6.5
+  google_mobile_ads: ^7.0.0
 
 dev_dependencies:
   flutter_test:

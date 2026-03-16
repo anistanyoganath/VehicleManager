@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
+import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
+import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
 import '../../data/models/vehicle_model.dart';
 import 'vehicle_controller.dart';
 
@@ -29,7 +31,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     super.dispose();
   }
 
-  void _saveVehicle() {
+  Future<void> _saveVehicle() async {
     if (_formKey.currentState!.validate()) {
       final vehicleController = Provider.of<VehicleController>(
         context,
@@ -44,6 +46,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
         type: _selectedType,
       );
       vehicleController.addVehicle(vehicle);
+      await AdsManager().showInterstitialAd();
       context.pop();
     }
   }
@@ -101,34 +104,40 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: ElevatedButton(
-            onPressed: _saveVehicle,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+            child: SafeArea(
+              child: ElevatedButton(
+                onPressed: () async => await _saveVehicle(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  minimumSize: const Size(double.infinity, 56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  'Save Vehicle',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
-            child: const Text(
-              'Save Vehicle',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
           ),
-        ),
+          const BannerAdvert(),
+        ],
       ),
     );
   }
