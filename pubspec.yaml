@@ -51,6 +51,7 @@ dependencies:
   timezone: ^0.9.4
   gma_mediation_unity: ^1.6.5
   google_mobile_ads: ^7.0.0
+  in_app_purchase: ^3.2.3
 
 dev_dependencies:
   flutter_test:

@@ -20,6 +20,8 @@ class AdsManager {
     _isPro = value;
   }
 
+  bool get isPro => _isPro;
+
   Future<void> initAll() async {
     loadRewardedAd();
     loadInterstitialAd();
@@ -27,7 +29,7 @@ class AdsManager {
 
   // ---------------- Rewarded ----------------
   Future<void> loadRewardedAd() async {
-    if (_isRewardLoading || _rewardedAd != null) return;
+    if (_isPro || _isRewardLoading || _rewardedAd != null) return;
     _isRewardLoading = true;
 
     await RewardedAd.load(

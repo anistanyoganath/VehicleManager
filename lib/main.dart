@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/utils/ads/ad_consent.dart';
+import 'package:vehiclemanager/core/utils/iap_manager.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/notification_service.dart';
 import 'data/local_db/hive_service.dart';
@@ -19,6 +20,7 @@ void main() async {
   MobileAds.instance.initialize();
 
   await HiveService.init();
+  await IAPManager().init();
   await NotificationService.init();
   runApp(const MyApp());
 }
@@ -34,6 +36,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ServiceController()),
         ChangeNotifierProvider(create: (_) => FuelController()),
         ChangeNotifierProvider(create: (_) => ReminderController()),
+        ChangeNotifierProvider(create: (_) => IAPManager()),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,

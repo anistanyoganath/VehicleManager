@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:vehiclemanager/core/utils/ads/ad_ids.dart';
+import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
 import 'package:vehiclemanager/core/utils/ads/request_ads.dart';
 
 class BannerAdvert extends StatefulWidget {
@@ -34,6 +35,10 @@ class _BannerAdvertState extends State<BannerAdvert> {
 
   @override
   Widget build(BuildContext context) {
+    if (AdsManager().isPro) {
+      return const SizedBox.shrink();
+    }
+
     return _bannerAd != null
         ? SizedBox(
             width: _bannerAd!.size.width.toDouble(),
