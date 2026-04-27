@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
 import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
-import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
+import 'package:vehiclemanager/features/dashboard/vechile_selection_dialog.dart';
 import 'package:vehiclemanager/features/service/service_controller.dart';
 import 'package:vehiclemanager/routes/app_routes.dart';
 import '../vehicles/vehicle_controller.dart';
@@ -45,12 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildVehicleSummary(context),
                   const SizedBox(height: 16),
                 ]),
-              ),
-            ),
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: BannerAdvert(),
               ),
             ),
           ],
@@ -271,6 +265,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final vehicleController = Provider.of<VehicleController>(context);
+    final hasMultipleVehicles = vehicleController.vehicles.length > 1;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -288,8 +285,24 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _buildActionCard(
                 () async {
-                  await AdsManager().showInterstitialAd();
-                  context.push(AppRoutes.fuelLog);
+                  if (hasMultipleVehicles) {
+                    // Show vehicle selection dialog
+                    await _showVehicleSelectionDialog(
+                      context,
+                      vehicleController,
+                      isForFuel: true,
+                    );
+                  } else if (vehicleController.vehicles.isNotEmpty) {
+                    // Only one vehicle, navigate directly
+                    context.push(
+                      AppRoutes.fuelLogPath(
+                        vehicleController.vehicles.first.id,
+                      ),
+                    );
+                  } else {
+                    // No vehicles, show message
+                    _showNoVehicleDialog(context, isForFuel: true);
+                  }
                 },
                 'Add Fuel',
                 Icons.local_gas_station,
@@ -300,8 +313,24 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: _buildActionCard(
                 () async {
-                  await AdsManager().showInterstitialAd();
-                  context.push(AppRoutes.addService);
+                  if (hasMultipleVehicles) {
+                    // Show vehicle selection dialog
+                    await _showVehicleSelectionDialog(
+                      context,
+                      vehicleController,
+                      isForFuel: false,
+                    );
+                  } else if (vehicleController.vehicles.isNotEmpty) {
+                    // Only one vehicle, navigate directly
+                    context.push(
+                      AppRoutes.addServicePath(
+                        vehicleController.vehicles.first.id,
+                      ),
+                    );
+                  } else {
+                    // No vehicles, show message
+                    _showNoVehicleDialog(context, isForFuel: false);
+                  }
                 },
                 'Add Service',
                 Icons.build,
@@ -311,6 +340,76 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  Future<void> _showVehicleSelectionDialog(
+    BuildContext context,
+    VehicleController vehicleController, {
+    required bool isForFuel,
+  }) async {
+    final selectedVehicle = await showDialog<VehicleModel>(
+      context: context,
+      builder: (context) => VehicleSelectionDialog(
+        vehicles: vehicleController.vehicles,
+        isForFuel: isForFuel,
+      ),
+    );
+
+    if (selectedVehicle != null && context.mounted) {
+      if (isForFuel) {
+        context.push(AppRoutes.fuelLogPath(selectedVehicle.id));
+      } else {
+        context.push(AppRoutes.addServicePath(selectedVehicle.id));
+      }
+    }
+  }
+
+  void _showNoVehicleDialog(BuildContext context, {required bool isForFuel}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'No Vehicles Found',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.directions_car_filled,
+              size: 60,
+              color: AppColors.warning,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'You need to add a vehicle first before adding ${isForFuel ? 'fuel' : 'service'} logs.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push(AppRoutes.addVehicle);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Add Vehicle'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -382,7 +481,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    await AdsManager().showInterstitialAd();
                     context.push(AppRoutes.vehicles);
                   },
                   child: const Text('View All'),

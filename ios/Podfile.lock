@@ -15,6 +15,9 @@ PODS:
     - Google-Mobile-Ads-SDK (~> 12.0)
     - UnityAds (= 4.16.5)
   - GoogleUserMessagingPlatform (3.1.0)
+  - in_app_purchase_storekit (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - UnityAds (4.16.5)
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
@@ -25,6 +28,7 @@ DEPENDENCIES:
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - gma_mediation_unity (from `.symlinks/plugins/gma_mediation_unity/ios`)
   - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
+  - in_app_purchase_storekit (from `.symlinks/plugins/in_app_purchase_storekit/darwin`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 SPEC REPOS:
@@ -43,6 +47,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/gma_mediation_unity/ios"
   google_mobile_ads:
     :path: ".symlinks/plugins/google_mobile_ads/ios"
+  in_app_purchase_storekit:
+    :path: ".symlinks/plugins/in_app_purchase_storekit/darwin"
   webview_flutter_wkwebview:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
@@ -54,6 +60,7 @@ SPEC CHECKSUMS:
   google_mobile_ads: 2ba32ffef4a026aa94f526774a40a14ca9662adf
   GoogleMobileAdsMediationUnity: 85fd40e2b42371341446745899e2963faaaaaba9
   GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
+  in_app_purchase_storekit: 2342c0a5da86593124d08dd13d920f39a52b273a
   UnityAds: 8b9e0ecf7c4aa7334d15f81efb58db279e28f502
   webview_flutter_wkwebview: 29eb20d43355b48fe7d07113835b9128f84e3af4
 

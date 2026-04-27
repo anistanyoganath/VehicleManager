@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
-import 'package:vehiclemanager/core/utils/ads/ads_manager.dart';
 import 'package:vehiclemanager/core/utils/ads/banner_ad.dart';
+import 'package:vehiclemanager/features/fuel/fuel_controller.dart';
+import 'package:vehiclemanager/routes/app_routes.dart';
+import '../../data/models/fuel_log_model.dart';
 
 class FuelLogScreen extends StatelessWidget {
-  final String vehicleId;
+  final int vehicleId;
 
   const FuelLogScreen({super.key, required this.vehicleId});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Provider.of<FuelController>(context);
+
+    final fuelLogs = controller.getFuelLogsByVehicleId(vehicleId);
+
+    final totalSpent = fuelLogs.fold<double>(0, (sum, e) => sum + e.totalPrice);
+
+    final totalLiters = fuelLogs.fold<double>(0, (sum, e) => sum + e.liters);
+
+    final double avgPrice = totalLiters == 0 ? 0 : (totalSpent / totalLiters);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(color: AppColors.textPrimary),
-
         elevation: 0,
         title: Text(
           'Fuel Log',
@@ -25,34 +38,31 @@ class FuelLogScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.bar_chart, color: AppColors.textPrimary),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: Column(
         children: [
-          _buildSummaryCard(),
+          _buildSummaryCard(totalSpent, avgPrice, totalLiters),
+
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: 8,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: _buildFuelEntry(),
-                );
-              },
-            ),
+            child: fuelLogs.isEmpty
+                ? const Center(child: Text("No fuel logs yet"))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: fuelLogs.length,
+                    itemBuilder: (context, index) {
+                      final log = fuelLogs[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: _buildFuelEntry(log),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await AdsManager().showInterstitialAd();
-          // Add fuel functionality goes here.
+          context.push(AppRoutes.addFuelPath(vehicleId));
         },
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.add),
@@ -61,24 +71,39 @@ class FuelLogScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryCard() {
+  // ✅ Summary with REAL values
+  Widget _buildSummaryCard(
+    double totalSpent,
+    double avgPrice,
+    double totalLiters,
+  ) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.primary, AppColors.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildSummaryItem('Total Spent', 'Rp 850K', Icons.money),
-          _buildSummaryItem('Avg Price', 'Rp 12.5K', Icons.trending_up),
-          _buildSummaryItem('Total Ltr', '68 L', Icons.local_gas_station),
+          _buildSummaryItem(
+            'Total Spent',
+            _formatCurrency(totalSpent),
+            Icons.money,
+          ),
+          _buildSummaryItem(
+            'Avg Price',
+            _formatCurrency(avgPrice),
+            Icons.trending_up,
+          ),
+          _buildSummaryItem(
+            'Total Ltr',
+            '${totalLiters.toStringAsFixed(1)} L',
+            Icons.local_gas_station,
+          ),
         ],
       ),
     );
@@ -105,7 +130,8 @@ class FuelLogScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFuelEntry() {
+  // ✅ Dynamic entry
+  Widget _buildFuelEntry(FuelLogModel log) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -134,15 +160,17 @@ class FuelLogScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 🔥 Fuel type + price
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Pertamax Turbo',
+                      log.fuelType,
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
@@ -150,7 +178,7 @@ class FuelLogScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Rp 150K',
+                      _formatCurrency(log.totalPrice),
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
@@ -159,13 +187,16 @@ class FuelLogScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 4),
+
+                // 🔥 Mileage + liters
                 Row(
                   children: [
                     Icon(Icons.speed, size: 12, color: AppColors.textHint),
                     const SizedBox(width: 4),
                     Text(
-                      '12,450 km',
+                      '${log.mileage} km',
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
@@ -179,7 +210,7 @@ class FuelLogScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '12.5 L',
+                      '${log.liters} L',
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
@@ -187,9 +218,12 @@ class FuelLogScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 4),
+
+                // 🔥 Date
                 Text(
-                  '2 days ago',
+                  _timeAgo(log.date),
                   style: TextStyle(color: AppColors.textHint, fontSize: 10),
                 ),
               ],
@@ -198,5 +232,18 @@ class FuelLogScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // ✅ Helpers
+  String _formatCurrency(double value) {
+    return 'Rs ${value.toStringAsFixed(0)}';
+  }
+
+  String _timeAgo(DateTime date) {
+    final diff = DateTime.now().difference(date).inDays;
+
+    if (diff == 0) return "Today";
+    if (diff == 1) return "Yesterday";
+    return "$diff days ago";
   }
 }

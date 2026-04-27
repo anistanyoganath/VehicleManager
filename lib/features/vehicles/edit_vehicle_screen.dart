@@ -66,7 +66,7 @@ class _EditVehicleScreenState extends State<EditVehicleScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vehicle updated successfully')),
       );
-      context.push(AppRoutes.vehicleDetailPath(widget.vehicleId.toString()));
+      context.push(AppRoutes.vehicleDetailPath(widget.vehicleId));
     }
   }
 

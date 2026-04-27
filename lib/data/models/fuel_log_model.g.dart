@@ -23,13 +23,14 @@ class FuelLogModelAdapter extends TypeAdapter<FuelLogModel> {
       amountOfFuel: fields[3] as double,
       price: fields[4] as double,
       mileage: fields[5] as int,
+      fuelType: fields[6] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, FuelLogModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class FuelLogModelAdapter extends TypeAdapter<FuelLogModel> {
       ..writeByte(4)
       ..write(obj.price)
       ..writeByte(5)
-      ..write(obj.mileage);
+      ..write(obj.mileage)
+      ..writeByte(6)
+      ..write(obj.fuelType);
   }
 
   @override

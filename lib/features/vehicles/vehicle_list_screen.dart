@@ -68,7 +68,7 @@ class VehicleListScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           onTap: () {
             // Navigate to vehicle detail
-            context.push(AppRoutes.vehicleDetailPath(vehicle.id.toString()));
+            context.push(AppRoutes.vehicleDetailPath(vehicle.id));
           },
           child: Padding(
             padding: const EdgeInsets.all(16),

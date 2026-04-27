@@ -22,6 +22,9 @@ class FuelLogModel {
   @HiveField(5)
   final int mileage;
 
+  @HiveField(6)
+  final String fuelType;
+
   FuelLogModel({
     required this.id,
     required this.vehicleId,
@@ -29,7 +32,18 @@ class FuelLogModel {
     required this.amountOfFuel,
     required this.price,
     required this.mileage,
+    required this.fuelType,
   });
+
+  // ✅ Computed helpers
+  double get liters => amountOfFuel;
+
+  double get totalPrice => price;
+
+  double get pricePerLiter {
+    if (amountOfFuel == 0) return 0;
+    return price / amountOfFuel;
+  }
 
   FuelLogModel copyWith({
     int? id,
@@ -38,6 +52,7 @@ class FuelLogModel {
     double? amountOfFuel,
     double? price,
     int? mileage,
+    String? fuelType,
   }) {
     return FuelLogModel(
       id: id ?? this.id,
@@ -46,6 +61,7 @@ class FuelLogModel {
       amountOfFuel: amountOfFuel ?? this.amountOfFuel,
       price: price ?? this.price,
       mileage: mileage ?? this.mileage,
+      fuelType: fuelType ?? this.fuelType,
     );
   }
 }

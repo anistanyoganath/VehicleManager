@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:vehiclemanager/features/dashboard/home_screen.dart';
+import 'package:vehiclemanager/features/fuel/add_fuel_screen.dart';
 import 'package:vehiclemanager/features/fuel/fuel_log_screen.dart';
 import 'package:vehiclemanager/features/reminders/reminder_settings_screen.dart';
 import 'package:vehiclemanager/features/notifications/notifications_screen.dart';
@@ -44,7 +45,8 @@ class AppRouter {
         path: AppRoutes.vehicleDetail,
         name: 'vehicleDetail',
         builder: (context, state) {
-          final vehicleId = state.pathParameters['id'];
+          final vehicleIdStr = state.pathParameters['vehicleId'];
+          final vehicleId = int.tryParse(vehicleIdStr ?? '');
           if (vehicleId == null) {
             return const Scaffold(
               body: Center(child: Text('Vehicle ID not found')),
@@ -84,13 +86,29 @@ class AppRouter {
           return ServiceHistoryScreen(vehicleId: vehicleId);
         },
       ),
-
+      // Add Fuel Screen with vehicleId parameter
+      GoRoute(
+        path: AppRoutes.addFuel,
+        name: 'addFuel',
+        builder: (context, state) {
+          final vehicleIdStr = state.pathParameters['vehicleId'];
+          final vehicleId = int.tryParse(vehicleIdStr ?? '');
+          if (vehicleId == null) {
+            return const Scaffold(
+              body: Center(child: Text('Invalid Vehicle ID')),
+            );
+          }
+          return AddFuelScreen(vehicleId: vehicleId);
+        },
+      ),
       // Fuel Log Screen with vehicleId parameter
       GoRoute(
         path: AppRoutes.fuelLog,
         name: 'fuelLog',
         builder: (context, state) {
-          final vehicleId = state.pathParameters['vehicleId'];
+          final vehicleIdStr = state.pathParameters['vehicleId'];
+          final vehicleId = int.tryParse(vehicleIdStr ?? '');
+
           if (vehicleId == null) {
             return const Scaffold(
               body: Center(child: Text('Vehicle ID not found')),

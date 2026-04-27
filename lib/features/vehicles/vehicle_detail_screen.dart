@@ -12,25 +12,16 @@ import '../../data/models/service_record_model.dart';
 import '../../features/service/service_controller.dart';
 
 class VehicleDetailScreen extends StatelessWidget {
-  final String vehicleId;
+  final int vehicleId;
 
   const VehicleDetailScreen({super.key, required this.vehicleId});
 
   @override
   Widget build(BuildContext context) {
-    final vehicleIdInt = int.tryParse(vehicleId);
-
-    if (vehicleIdInt == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Vehicle Detail')),
-        body: const Center(child: Text('Invalid vehicle ID')),
-      );
-    }
-
     return Consumer2<VehicleController, ServiceController>(
       builder: (context, vehicleController, serviceController, child) {
         final vehicle = vehicleController.vehicles.firstWhere(
-          (v) => v.id == vehicleIdInt,
+          (v) => v.id == vehicleId,
           orElse: () => VehicleModel(
             id: -1,
             name: '',
@@ -118,9 +109,7 @@ class VehicleDetailScreen extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.edit_outlined),
                     onPressed: () {
-                      context.push(
-                        AppRoutes.editVehiclePath(vehicle.id.toString()),
-                      );
+                      context.push(AppRoutes.editVehiclePath(vehicle.id));
                     },
                   ),
                 ],
@@ -161,7 +150,6 @@ class VehicleDetailScreen extends StatelessWidget {
             Icons.build,
             const Color(0xFF2563EB),
             () async {
-              await AdsManager().showInterstitialAd();
               context.push(AppRoutes.addServicePath(vehicleId));
             },
           ),
@@ -174,8 +162,7 @@ class VehicleDetailScreen extends StatelessWidget {
             Icons.local_gas_station,
             const Color(0xFF10B981),
             () async {
-              await AdsManager().showInterstitialAd();
-              context.push(AppRoutes.fuelLogPath(vehicleId));
+              context.push(AppRoutes.addFuelPath(vehicleId));
             },
           ),
         ),
