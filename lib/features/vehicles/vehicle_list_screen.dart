@@ -92,13 +92,54 @@ class VehicleListScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        '${vehicle.brand} ${vehicle.model}',
-                        style: TextStyle(
-                          color: const Color(0xFF1E293B),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${vehicle.brand} ${vehicle.model}',
+                              style: const TextStyle(
+                                color: Color(0xFF1E293B),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Edit',
+                            visualDensity: VisualDensity.compact,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 40,
+                              height: 40,
+                            ),
+                            icon: const Icon(
+                              Icons.edit_outlined,
+                              color: Color(0xFF2563EB),
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              context.push(
+                                AppRoutes.editVehiclePath(vehicle.id),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            tooltip: 'Remove',
+                            visualDensity: VisualDensity.compact,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 40,
+                              height: 40,
+                            ),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            onPressed: () =>
+                                _confirmRemoveVehicle(context, vehicle),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -122,13 +163,50 @@ class VehicleListScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: const Color(0xFF94A3B8)),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _confirmRemoveVehicle(
+    BuildContext context,
+    VehicleModel vehicle,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove vehicle?'),
+        content: Text(
+          'Are you sure you want to remove ${vehicle.brand} ${vehicle.model}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    await Provider.of<VehicleController>(
+      context,
+      listen: false,
+    ).deleteVehicle(vehicle.id);
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Vehicle removed')));
   }
 
   Widget _buildStatusChip(String label, Color color) {

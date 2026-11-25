@@ -1,30 +1,58 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:vehiclemanager/main.dart';
 
+import 'package:vehiclemanager/data/models/vehicle_model.dart';
+import 'package:vehiclemanager/data/models/service_record_model.dart';
+import 'package:vehiclemanager/data/models/fuel_log_model.dart';
+import 'package:vehiclemanager/data/models/reminder_model.dart';
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  TestWidgetsFlutterBinding.ensureInitialized();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  setUpAll(() async {
+    // Initialize Hive for testing.
+    Hive.init('./test_hive');
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Register Hive adapters only if not already registered.
+    if (!Hive.isAdapterRegistered(VehicleModelAdapter().typeId)) {
+      Hive.registerAdapter(VehicleModelAdapter());
+    }
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    if (!Hive.isAdapterRegistered(ServiceRecordModelAdapter().typeId)) {
+      Hive.registerAdapter(ServiceRecordModelAdapter());
+    }
+
+    if (!Hive.isAdapterRegistered(FuelLogModelAdapter().typeId)) {
+      Hive.registerAdapter(FuelLogModelAdapter());
+    }
+
+    if (!Hive.isAdapterRegistered(ReminderModelAdapter().typeId)) {
+      Hive.registerAdapter(ReminderModelAdapter());
+    }
+
+    // Open boxes using their correct model types.
+    await Hive.openBox<VehicleModel>('vehicles');
+    await Hive.openBox<ServiceRecordModel>('services');
+    await Hive.openBox<FuelLogModel>('fuels');
+    await Hive.openBox<ReminderModel>('reminders');
+    await Hive.openBox('settings');
   });
+
+  tearDownAll(() async {
+    await Hive.close();
+    await Hive.deleteFromDisk();
+  });
+
+  testWidgets(
+    'VehicleManager app launches successfully',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const MyApp());
+
+      await tester.pump();
+
+      expect(find.byType(MyApp), findsOneWidget);
+    },
+  );
 }

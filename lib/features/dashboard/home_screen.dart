@@ -7,6 +7,7 @@ import 'package:vehiclemanager/features/dashboard/vechile_selection_dialog.dart'
 import 'package:vehiclemanager/features/service/service_controller.dart';
 import 'package:vehiclemanager/routes/app_routes.dart';
 import '../vehicles/vehicle_controller.dart';
+import '../../data/models/service_record_model.dart';
 import '../../data/models/vehicle_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -461,8 +462,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildVehicleSummary(BuildContext context) {
-    return Consumer<VehicleController>(
-      builder: (context, vehicleController, child) {
+    return Consumer2<VehicleController, ServiceController>(
+      builder: (context, vehicleController, serviceController, child) {
         final vehicles = vehicleController.vehicles;
 
         return Column(
@@ -487,6 +488,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: () => context.push(AppRoutes.addVehicle),
+                icon: const Icon(Icons.add),
+                label: const Text('Add Vehicle'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
             if (vehicles.isEmpty)
               Container(
@@ -499,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'No vehicles yet. Tap "View All" to add one.',
+                  'No vehicles yet. Tap "Add Vehicle" to get started.',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
               )
@@ -510,7 +526,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     .map(
                       (vehicle) => Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: _buildVehicleCard(vehicle),
+                        child: _buildVehicleCard(
+                          vehicle,
+                          serviceController.getServicesByVehicleId(vehicle.id),
+                        ),
                       ),
                     )
                     .toList(),
@@ -521,9 +540,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildVehicleCard(VehicleModel vehicle) {
+  Widget _buildVehicleCard(
+    VehicleModel vehicle,
+    List<ServiceRecordModel> serviceRecords,
+  ) {
     final milesText = '${vehicle.currentMileage} km';
-    final serviceText = 'No service data yet';
+    final sortedServices = serviceRecords.toList()
+      ..sort((a, b) => b.serviceDate.compareTo(a.serviceDate));
+    final serviceText = sortedServices.isEmpty
+        ? 'No service data yet'
+        : sortedServices
+              .take(2)
+              .map((service) => service.serviceType)
+              .join(' • ');
+    final remainingServices = sortedServices.length - 2;
+    final hasServices = sortedServices.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -590,18 +621,40 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Container(
+            constraints: const BoxConstraints(maxWidth: 160),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.1),
+              color: (hasServices ? AppColors.completed : AppColors.warning)
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text(
-              serviceText,
-              style: TextStyle(
-                color: AppColors.warning,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  serviceText,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: hasServices
+                        ? AppColors.completed
+                        : AppColors.warning,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (remainingServices > 0) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '+$remainingServices more',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 9,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

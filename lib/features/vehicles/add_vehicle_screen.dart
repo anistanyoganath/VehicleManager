@@ -47,6 +47,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
       );
       vehicleController.addVehicle(vehicle);
       await AdsManager().showInterstitialAd();
+      if (!mounted) return;
       context.pop();
     }
   }

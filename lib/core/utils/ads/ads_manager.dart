@@ -18,9 +18,19 @@ class AdsManager {
 
   void setPro(bool value) {
     _isPro = value;
+    if (_isPro) {
+      _rewardedAd?.dispose();
+      _rewardedAd = null;
+      _interstitialAd?.dispose();
+      _interstitialAd = null;
+    }
   }
 
   bool get isPro => _isPro;
+  bool get isPlatformSupported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 
   Future<void> initAll() async {
     loadRewardedAd();
@@ -29,7 +39,12 @@ class AdsManager {
 
   // ---------------- Rewarded ----------------
   Future<void> loadRewardedAd() async {
-    if (_isPro || _isRewardLoading || _rewardedAd != null) return;
+    if (!isPlatformSupported ||
+        _isPro ||
+        _isRewardLoading ||
+        _rewardedAd != null) {
+      return;
+    }
     _isRewardLoading = true;
 
     await RewardedAd.load(
@@ -37,9 +52,13 @@ class AdsManager {
       request: requestAd(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
-          _rewardedAd = ad;
           _isRewardLoading = false;
-          if (kDebugMode) print('Rewarded Ad loaded');
+          if (_isPro) {
+            ad.dispose();
+          } else {
+            _rewardedAd = ad;
+            if (kDebugMode) print('Rewarded Ad loaded');
+          }
         },
         onAdFailedToLoad: (error) {
           _isRewardLoading = false;
@@ -54,6 +73,8 @@ class AdsManager {
     required Function onRewarded,
     Function? onAdClosed,
   }) async {
+    if (!isPlatformSupported || _isPro) return;
+
     if (_rewardedAd == null) {
       await loadRewardedAd();
       return;
@@ -80,7 +101,12 @@ class AdsManager {
 
   // ---------------- Interstitial ----------------
   Future<void> loadInterstitialAd() async {
-    if (_isPro || _isInterstitialLoading || _interstitialAd != null) return;
+    if (!isPlatformSupported ||
+        _isPro ||
+        _isInterstitialLoading ||
+        _interstitialAd != null) {
+      return;
+    }
     _isInterstitialLoading = true;
 
     await InterstitialAd.load(
@@ -88,8 +114,12 @@ class AdsManager {
       request: requestAd(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
-          _interstitialAd = ad;
           _isInterstitialLoading = false;
+          if (_isPro) {
+            ad.dispose();
+          } else {
+            _interstitialAd = ad;
+          }
         },
         onAdFailedToLoad: (error) {
           _isInterstitialLoading = false;
@@ -101,7 +131,7 @@ class AdsManager {
   }
 
   Future<void> showInterstitialAd() async {
-    if (_isPro) return;
+    if (!isPlatformSupported || _isPro) return;
 
     if (_interstitialAd == null) {
       await loadInterstitialAd();

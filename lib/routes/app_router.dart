@@ -77,10 +77,12 @@ class AppRouter {
         path: AppRoutes.serviceHistory,
         name: 'serviceHistory',
         builder: (context, state) {
-          final vehicleId = state.pathParameters['vehicleId'];
+          final vehicleId = int.tryParse(
+            state.pathParameters['vehicleId'] ?? '',
+          );
           if (vehicleId == null) {
             return const Scaffold(
-              body: Center(child: Text('Vehicle ID not found')),
+              body: Center(child: Text('Invalid Vehicle ID')),
             );
           }
           return ServiceHistoryScreen(vehicleId: vehicleId);
