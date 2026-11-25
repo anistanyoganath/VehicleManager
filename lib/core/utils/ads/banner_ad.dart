@@ -30,12 +30,20 @@ class _BannerAdvertState extends State<BannerAdvert> {
   @override
   void initState() {
     super.initState();
-    loadAd();
+    if (AdsManager().isPlatformSupported && !AdsManager().isPro) {
+      loadAd();
+    }
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (AdsManager().isPro) {
+    if (!AdsManager().isPlatformSupported || AdsManager().isPro) {
       return const SizedBox.shrink();
     }
 

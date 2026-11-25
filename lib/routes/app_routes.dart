@@ -6,7 +6,7 @@ class AppRoutes {
   static const String reminders = '/reminders';
 
   // Routes with parameters - these are the path patterns
-  static const String vehicleDetail = '/vehicle/:id';
+  static const String vehicleDetail = '/vehicle/:vehicleId';
   static const String addService = '/add-service/:vehicleId';
   static const String serviceHistory = '/service-history/:vehicleId';
   static const String fuelLog = '/fuel-log/:vehicleId';

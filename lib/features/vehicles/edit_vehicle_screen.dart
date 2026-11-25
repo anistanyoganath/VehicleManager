@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:vehiclemanager/core/theme/app_colors.dart';
 import 'package:vehiclemanager/features/vehicles/vehicle_controller.dart';
-import 'package:vehiclemanager/routes/app_routes.dart';
 import '../../data/models/vehicle_model.dart';
 
 class EditVehicleScreen extends StatefulWidget {
@@ -52,22 +51,25 @@ class _EditVehicleScreenState extends State<EditVehicleScreen> {
     super.dispose();
   }
 
-  void _saveVehicle() {
-    if (_formKey.currentState!.validate()) {
-      final controller = Provider.of<VehicleController>(context, listen: false);
-      final updated = _vehicle.copyWith(
-        name: _nameController.text,
-        brand: _brandController.text,
-        model: _modelController.text,
-        currentMileage: int.parse(_mileageController.text),
-        type: _selectedType,
-      );
-      controller.updateVehicle(updated);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vehicle updated successfully')),
-      );
-      context.push(AppRoutes.vehicleDetailPath(widget.vehicleId));
-    }
+  Future<void> _saveVehicle() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final controller = Provider.of<VehicleController>(context, listen: false);
+    final updated = _vehicle.copyWith(
+      name: _nameController.text,
+      brand: _brandController.text,
+      model: _modelController.text,
+      currentMileage: int.parse(_mileageController.text),
+      type: _selectedType,
+    );
+    await controller.updateVehicle(updated);
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    context.pop();
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Vehicle updated successfully')),
+    );
   }
 
   @override
